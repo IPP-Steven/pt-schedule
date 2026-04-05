@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>一風堂台南高鐵店 PT 給班表</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','Segoe UI',Arial,sans-serif;background:#F7F8FA;color:#1a1a1a;font-size:14px;-webkit-text-size-adjust:100%}
+.container{max-width:760px;margin:0 auto;padding:12px}
+
+/* Header */
+.hdr{background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:10px;border:1px solid #e8e8e8}
+.hdr h1{font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:.3px}
+.hdr p{font-size:12px;color:#888;margin-top:2px}
+
+/* Tabs */
+.tabs{display:flex;background:#fff;border-radius:12px;margin-bottom:10px;border:1px solid #e8e8e8;overflow:hidden}
+.tab{flex:1;padding:10px 6px;font-size:13px;cursor:pointer;border:none;background:transparent;color:#888;font-weight:600;transition:all .2s}
+.tab.active{background:#1a1a1a;color:#fff}
+
+/* Sections */
+.sec{display:none}.sec.active{display:block}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #e8e8e8}
+.card-title{font-size:13px;font-weight:700;margin-bottom:10px;color:#1a1a1a}
+
+/* Form elements */
+label{font-size:12px;color:#666;display:block;margin-bottom:3px;font-weight:500}
+select,input[type="date"]{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;appearance:auto}
+select:focus,input:focus{outline:none;border-color:#666}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;border:1px solid #ddd;background:#fff;color:#1a1a1a;transition:all .15s;touch-action:manipulation}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-danger{background:#DC3545;color:#fff;border-color:#DC3545}
+
+/* 7-day grid */
+.grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.day-col{text-align:center}
+.day-lbl{font-size:10px;color:#888;line-height:1.3;margin-bottom:4px}
+.day-lbl b{font-size:11px;color:#444;display:block}
+
+/* Availability input */
+.avail-input{width:100%;padding:8px 2px;font-size:15px;font-weight:700;text-align:center;border:1.5px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a}
+.avail-input:focus{outline:none;border-color:#666;box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+
+/* Value colors */
+.v-A{background:#E8F5E9!important;color:#2E7D32!important;border-color:#81C784!important}
+.v-X{background:#F5F5F5!important;color:#999!important;border-color:#ddd!important}
+.v-num{background:#E3F2FD!important;color:#1565C0!important;border-color:#64B5F6!important}
+
+/* Quick buttons */
+.quick-btns{display:flex;gap:4px;margin-top:4px;justify-content:center}
+.qbtn{flex:1;padding:4px;font-size:11px;font-weight:700;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;text-align:center;touch-action:manipulation}
+.qbtn:active{opacity:.7}
+.qbtn-a{color:#2E7D32;border-color:#81C784;background:#E8F5E9}
+.qbtn-x{color:#999;border-color:#ddd;background:#F5F5F5}
+
+/* Tags & Badges */
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:12px;margin:1px;font-weight:600}
+.tag-A{background:#E8F5E9;color:#2E7D32}
+.tag-X{background:#F5F5F5;color:#999}
+.tag-num{background:#E3F2FD;color:#1565C0}
+.badge{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:700}
+.badge-hi{background:#E8F5E9;color:#2E7D32}
+.badge-md{background:#FFF3CD;color:#856404}
+.badge-lo{background:#FFEBEE;color:#C62828}
+
+/* Status messages */
+.ok{background:#E8F5E9;border:1px solid #c3e6cb;border-radius:8px;padding:8px 12px;font-size:12px;color:#2E7D32;margin-bottom:6px}
+.warn{background:#FFF3CD;border:1px solid #ffeeba;border-radius:8px;padding:8px 12px;font-size:12px;color:#856404;margin-bottom:6px}
+.err{background:#FFEBEE;border:1px solid #f5c6cb;border-radius:8px;padding:8px 12px;font-size:12px;color:#C62828;margin-bottom:6px}
+.loading{text-align:center;padding:20px;color:#888;font-size:13px}
+
+/* Hint box */
+.hint{background:#F5F5F5;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;line-height:1.8;margin-bottom:10px}
+
+/* Firebase setup */
+.setup-box{background:#FFF3CD;border:1px solid #ffeeba;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.setup-box h3{font-size:13px;font-weight:700;margin-bottom:4px}
+.setup-box p{font-size:12px;color:#666;margin-bottom:8px}
+.setup-box textarea{width:100%;height:100px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:6px 6px;text-align:left;font-weight:700;border-bottom:2px solid #e0e0e0;color:#555;white-space:nowrap}
+.tbl td{padding:5px 6px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .zone-hdr td{padding:8px 6px;background:#F5F5F5;font-weight:700;color:#444;font-size:13px}
+
+/* Connection indicator */
+.conn{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.conn-on{background:#4CAF50}
+.conn-off{background:#F44336}
+.conn-wait{background:#FF9800}
+
+/* Responsive */
+@media(max-width:420px){
+  .container{padding:8px}
+  .card{padding:12px}
+  .grid7{gap:3px}
+  .avail-input{padding:7px 1px;font-size:14px}
+  .day-lbl{font-size:9px}
+  .day-lbl b{font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="hdr">
+  <h1>一風堂台南高鐵店 PT 給班表</h1>
+  <p><span class="conn conn-wait" id="conn-dot"></span><span id="conn-text">連線中...</span> | <span id="week-lbl">讀取中...</span></p>
+</div>
+
+<!-- Firebase Setup (shown when not configured) -->
+<div class="setup-box" id="setup-box" style="display:none">
+  <h3>首次使用：請設定 Firebase</h3>
+  <p>請到 Firebase Console 複製你的 firebaseConfig 物件，貼到下方：</p>
+  <textarea id="firebase-config-input" placeholder='直接貼上 Firebase Console 顯示的 firebaseConfig（兩種格式都可）：
+
+// Firebase 給的 JS 格式 ✓
+{
+  apiKey: "AIza...",
+  authDomain: "xxx.firebaseapp.com",
+  databaseURL: "https://xxx-default-rtdb.firebaseio.com",
+  ...
+}
+
+// 或純 JSON 格式也可 ✓'></textarea>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()">儲存並連線</button>
+    <button class="btn" onclick="useDemoMode()">先用離線模式試玩</button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('form')">填給班</button>
+  <button class="tab" onclick="switchTab('board')">即時看板</button>
+  <button class="tab" onclick="switchTab('export')">匯出排班</button>
+</div>
+
+<!-- ===== Tab 1: 填給班 ===== -->
+<div class="sec active" id="tab-form">
+  <div class="card">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <label>你的名字</label>
+        <select id="sel-name" onchange="onNameChange()">
+          <option value="">-- 選擇 --</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:110px">
+        <label>排班週起始（週一）</label>
+        <input type="date" id="week-start" onchange="onWeekChange()">
+      </div>
+    </div>
+  </div>
+
+  <div id="form-hint" class="hint" style="text-align:center;color:#888">
+    請先選擇你的名字
+  </div>
+
+  <div id="form-body" style="display:none">
+    <div class="hint">
+      <strong>填寫方式：</strong>
+      <strong style="color:#2E7D32">A</strong> = 全天可排 |
+      <strong style="color:#999">X</strong> = 不能排班 |
+      <strong style="color:#1565C0">~17</strong> = 只能到17:00 |
+      <strong style="color:#1565C0">17~</strong> = 17:00後才能 |
+      <strong style="color:#1565C0">10~18</strong> = 指定時段
+    </div>
+
+    <div class="card">
+      <div class="card-title">選擇可上班的日期</div>
+      <div id="avail-grid" class="grid7"></div>
+    </div>
+
+    <div class="card" id="preview-card">
+      <div class="card-title">你的給班預覽</div>
+      <div id="preview-content"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="submitAvail()" id="submit-btn">送出給班</button>
+      <button class="btn" onclick="clearAvail()">清除重填</button>
+      <span id="submit-msg" style="font-size:12px"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Tab 2: 即時看板 ===== -->
+<div class="sec" id="tab-board">
+  <div class="card" style="padding:10px 14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <div>
+        <span id="board-week" style="font-weight:700;font-size:13px"></span>
+        <span id="board-count" style="font-size:12px;color:#888;margin-left:6px"></span>
+      </div>
+      <button class="btn btn-sm" onclick="refreshBoard()">重新整理</button>
+    </div>
+  </div>
+
+  <div id="board-loading" class="loading">讀取中...</div>
+
+  <div id="board-content" style="display:none">
+    <div class="card">
+      <div class="card-title">每日可用人力</div>
+      <div id="daily-summary" class="grid7"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">外場夥伴</div>
+      <div style="overflow-x:auto"><div id="board-outer"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">內場夥伴</div>
+      <div style="overflow-x:auto"><div id="board-inner"></div></div>
+    </div>
+
+    <div id="board-missing"></div>
+  </div>
+</div>
+
+<!-- ===== Tab 3: 匯出排班 ===== -->
+<div class="sec" id="tab-export">
+  <div id="export-loading" class="loading">讀取中...</div>
+
+  <div id="export-content" style="display:none">
+    <div class="card">
+      <div class="card-title">每日人力供給分析</div>
+      <div id="export-analysis"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">給班總表</div>
+      <div id="export-table" style="overflow-x:auto"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="downloadExcel()">下載 Excel</button>
+        <button class="btn" onclick="copyText()">複製文字</button>
+        <span id="copy-msg" style="font-size:12px;color:#2E7D32;align-self:center"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<script>
+// ============================================================
+// Constants
+// ============================================================
+const DAYS = ['週一','週二','週三','週四','週五','週六','週日']
+const STAFF = [
+  {name:'潘潘',zone:'外場'},{name:'暄嬡',zone:'外場'},{name:'鴻勳',zone:'外場'},
+  {name:'郁正',zone:'外場'},{name:'芳儀',zone:'外場'},{name:'昭瑜',zone:'外場'},
+  {name:'昭華',zone:'外場'},{name:'宣',zone:'外場'},{name:'璐莎',zone:'外場'},
+  {name:'阿峻',zone:'外場'},{name:'阿楠',zone:'外場'},{name:'懿純',zone:'外場'},
+  {name:'妤汶',zone:'內場'},{name:'昱達',zone:'內場'},{name:'昱誠',zone:'內場'},
+  {name:'豆腐',zone:'內場'},{name:'晁于',zone:'內場'},{name:'明漢',zone:'內場'},
+  {name:'小涵',zone:'內場'},{name:'琳太朗',zone:'內場'},
+]
+// Minimum staff per day: weekday vs weekend
+const MIN_INNER_WD = 3, MIN_OUTER_WD = 3
+const MIN_INNER_WE = 4, MIN_OUTER_WE = 4
+
+// ============================================================
+// State
+// ============================================================
+let db = null
+let demoMode = false
+let demoData = {}
+let weekStart = getNextMonday()
+let myName = ''
+let myAvail = Array(7).fill('X')
+let boardCache = {}
+let activeListener = null
+
+// ============================================================
+// Firebase Init
+// ============================================================
+function getStoredConfig() {
+  try { return JSON.parse(localStorage.getItem('ippudo_firebase_config')) } catch(e) { return null }
+}
+
+function initFirebase(config) {
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(config)
+    }
+    db = firebase.database()
+    setConnStatus('on', '已連線')
+    document.getElementById('setup-box').style.display = 'none'
+    return true
+  } catch(e) {
+    console.error('Firebase init error:', e)
+    setConnStatus('off', '連線失敗')
+    return false
+  }
+}
+
+function parseFirebaseConfig(raw) {
+  // Firebase Console 可能給 JS 格式或純 JSON，兩種都支援
+  let cleaned = raw.trim()
+  // 移除 const firebaseConfig = ... 包裝
+  cleaned = cleaned.replace(/^const\s+\w+\s*=\s*/, '')
+  // 移除結尾的分號
+  cleaned = cleaned.replace(/;\s*$/, '')
+  // 嘗試直接 JSON.parse（若使用者已複製純 JSON）
+  try { return JSON.parse(cleaned) } catch(e) {}
+  // 嘗試用 Function 解析 JS 物件字面值（Firebase Console 的預設格式）
+  try { return Function('"use strict"; return (' + cleaned + ')')() } catch(e) {}
+  throw new Error('無法解析設定，請確認複製的是 firebaseConfig 大括號內的內容')
+}
+
+function saveFirebaseConfig() {
+  const raw = document.getElementById('firebase-config-input').value.trim()
+  try {
+    const config = parseFirebaseConfig(raw)
+    if (!config.databaseURL) {
+      alert('缺少 databaseURL！\n\n請確認已啟用 Realtime Database，\n且複製的是完整的 firebaseConfig 物件。')
+      return
+    }
+    localStorage.setItem('ippudo_firebase_config', JSON.stringify(config))
+    if (initFirebase(config)) {
+      alert('連線成功！')
+      loadMyData()
+    }
+  } catch(e) {
+    alert('解析失敗：' + e.message + '\n\n請直接複製 Firebase Console 裡\nfirebaseConfig = { ... } 大括號內的全部內容（含大括號）。')
+  }
+}
+
+function useDemoMode() {
+  demoMode = true
+  demoData = {}
+  setConnStatus('off', '離線模式（資料僅存本機）')
+  document.getElementById('setup-box').style.display = 'none'
+  // Load from localStorage for demo
+  try { demoData = JSON.parse(localStorage.getItem('ippudo_demo_' + weekStart) || '{}') } catch(e) {}
+}
+
+function setConnStatus(status, text) {
+  const dot = document.getElementById('conn-dot')
+  dot.className = 'conn conn-' + status
+  document.getElementById('conn-text').textContent = text
+}
+
+// ============================================================
+// Date Helpers
+// ============================================================
+function getNextMonday() {
+  const d = new Date()
+  const day = d.getDay() || 7
+  d.setDate(d.getDate() + (8 - day))
+  return formatDate(d)
+}
+
+function formatDate(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
+}
+
+function getWeekDates(ws) {
+  const d = new Date(ws)
+  return Array.from({length: 7}, (_, i) => {
+    const dd = new Date(d)
+    dd.setDate(d.getDate() + i)
+    return `${dd.getMonth() + 1}/${dd.getDate()}`
+  })
+}
+
+function getWeekFullDates(ws) {
+  const d = new Date(ws)
+  return Array.from({length: 7}, (_, i) => {
+    const dd = new Date(d)
+    dd.setDate(d.getDate() + i)
+    return dd
+  })
+}
+
+function getWeekLabel(ws) {
+  const dates = getWeekDates(ws)
+  return `${dates[0]}（一）～ ${dates[6]}（日）`
+}
+
+function onWeekChange() {
+  weekStart = document.getElementById('week-start').value || weekStart
+  updateWeekDisplay()
+  if (myName) loadMyData()
+}
+
+function updateWeekDisplay() {
+  document.getElementById('week-lbl').textContent = getWeekLabel(weekStart)
+}
+
+// ============================================================
+// Tab Switching
+// ============================================================
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['form','board','export'][i] === id)
+  })
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'))
+  document.getElementById('tab-' + id).classList.add('active')
+  if (id === 'board') refreshBoard()
+  if (id === 'export') refreshExport()
+}
+
+// ============================================================
+// Tab 1: 填給班
+// ============================================================
+function initNameSelect() {
+  const sel = document.getElementById('sel-name')
+  const saved = localStorage.getItem('ippudo_my_name')
+  let optOuter = '<optgroup label="外場">'
+  let optInner = '<optgroup label="內場">'
+  STAFF.forEach(s => {
+    const selected = s.name === saved ? ' selected' : ''
+    const opt = `<option value="${s.name}"${selected}>${s.name}</option>`
+    if (s.zone === '外場') optOuter += opt
+    else optInner += opt
+  })
+  sel.innerHTML = '<option value="">-- 選擇 --</option>' + optOuter + '</optgroup>' + optInner + '</optgroup>'
+  if (saved) { myName = saved; onNameChange() }
+}
+
+function onNameChange() {
+  myName = document.getElementById('sel-name').value
+  localStorage.setItem('ippudo_my_name', myName)
+  if (!myName) {
+    document.getElementById('form-body').style.display = 'none'
+    document.getElementById('form-hint').style.display = 'block'
+    return
+  }
+  document.getElementById('form-hint').style.display = 'none'
+  document.getElementById('form-body').style.display = 'block'
+  loadMyData()
+}
+
+async function loadMyData() {
+  if (demoMode) {
+    try { demoData = JSON.parse(localStorage.getItem('ippudo_demo_' + weekStart) || '{}') } catch(e) {}
+    const mine = demoData[myName]
+    myAvail = mine ? [...mine.avail] : Array(7).fill('X')
+    renderAvailGrid()
+    return
+  }
+  if (!db) { myAvail = Array(7).fill('X'); renderAvailGrid(); return }
+  try {
+    const snap = await db.ref('weeks/' + weekStart + '/' + myName).once('value')
+    const data = snap.val()
+    myAvail = data ? [...data.avail] : Array(7).fill('X')
+  } catch(e) {
+    myAvail = Array(7).fill('X')
+  }
+  renderAvailGrid()
+}
+
+function colorClass(v) {
+  if (!v || v === 'X') return 'v-X'
+  if (v === 'A') return 'v-A'
+  return 'v-num'
+}
+
+function tagCls(v) {
+  if (!v || v === 'X') return 'tag-X'
+  if (v === 'A') return 'tag-A'
+  return 'tag-num'
+}
+
+function renderAvailGrid() {
+  const dates = getWeekDates(weekStart)
+  const fullDates = getWeekFullDates(weekStart)
+  const container = document.getElementById('avail-grid')
+  container.innerHTML = dates.map((d, i) => {
+    const dayName = ['一','二','三','四','五','六','日'][i]
+    const isWeekend = i >= 5
+    return `<div class="day-col">
+      <div class="day-lbl"><b style="${isWeekend ? 'color:#C62828' : ''}">${dayName}</b>${d}</div>
+      <input class="avail-input ${colorClass(myAvail[i])}" value="${myAvail[i]}"
+        id="av-${i}" inputmode="text" autocomplete="off"
+        onfocus="this.select()"
+        oninput="onAvailInput(${i}, this)">
+      <div class="quick-btns">
+        <button class="qbtn qbtn-a" onclick="setAvail(${i},'A')">A</button>
+        <button class="qbtn qbtn-x" onclick="setAvail(${i},'X')">X</button>
+      </div>
+    </div>`
+  }).join('')
+  updatePreview()
+}
+
+function onAvailInput(idx, el) {
+  let v = el.value.trim().toUpperCase() || 'X'
+  myAvail[idx] = v
+  el.className = 'avail-input ' + colorClass(v)
+  updatePreview()
+}
+
+function setAvail(idx, val) {
+  myAvail[idx] = val
+  const el = document.getElementById('av-' + idx)
+  el.value = val
+  el.className = 'avail-input ' + colorClass(val)
+  updatePreview()
+}
+
+function clearAvail() {
+  myAvail = Array(7).fill('X')
+  renderAvailGrid()
+}
+
+function updatePreview() {
+  const cnt = myAvail.filter(v => v && v !== 'X').length
+  const badgeCls = cnt >= 4 ? 'badge-hi' : cnt >= 2 ? 'badge-md' : 'badge-lo'
+  document.getElementById('preview-content').innerHTML =
+    `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:700">${myName}</span>
+      <span class="badge ${badgeCls}">${cnt} 天可排</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:6px">
+      ${myAvail.map((v, i) => `<span class="tag ${tagCls(v)}">${DAYS[i]} ${v}</span>`).join('')}
+    </div>`
+}
+
+async function submitAvail() {
+  if (!myName) { alert('請先選擇名字'); return }
+  const zone = STAFF.find(s => s.name === myName)?.zone || '未知'
+  const msg = document.getElementById('submit-msg')
+  const btn = document.getElementById('submit-btn')
+  btn.disabled = true
+  msg.style.color = '#888'
+  msg.textContent = '送出中...'
+
+  const record = {
+    zone: zone,
+    avail: [...myAvail],
+    updatedAt: Date.now()
+  }
+
+  if (demoMode) {
+    demoData[myName] = record
+    localStorage.setItem('ippudo_demo_' + weekStart, JSON.stringify(demoData))
+    msg.style.color = '#2E7D32'
+    msg.textContent = '已送出（離線模式）'
+    btn.disabled = false
+    setTimeout(() => msg.textContent = '', 4000)
+    return
+  }
+
+  if (!db) {
+    msg.style.color = '#C62828'
+    msg.textContent = '尚未連線 Firebase'
+    btn.disabled = false
+    return
+  }
+
+  try {
+    await db.ref('weeks/' + weekStart + '/' + myName).set(record)
+    msg.style.color = '#2E7D32'
+    msg.textContent = '已送出！切到「即時看板」可看到。'
+    setTimeout(() => msg.textContent = '', 5000)
+  } catch(e) {
+    msg.style.color = '#C62828'
+    msg.textContent = '送出失敗：' + e.message
+  }
+  btn.disabled = false
+}
+
+// ============================================================
+// Tab 2: 即時看板
+// ============================================================
+function refreshBoard() {
+  const loadEl = document.getElementById('board-loading')
+  const contentEl = document.getElementById('board-content')
+  loadEl.style.display = 'block'
+  contentEl.style.display = 'none'
+  document.getElementById('board-week').textContent = getWeekLabel(weekStart)
+
+  if (demoMode) {
+    try { demoData = JSON.parse(localStorage.getItem('ippudo_demo_' + weekStart) || '{}') } catch(e) {}
+    boardCache = demoData
+    loadEl.style.display = 'none'
+    contentEl.style.display = 'block'
+    renderBoard(demoData)
+    return
+  }
+
+  if (!db) {
+    loadEl.textContent = '尚未連線 Firebase'
+    return
+  }
+
+  // Detach previous listener
+  if (activeListener) { activeListener.off(); activeListener = null }
+
+  const ref = db.ref('weeks/' + weekStart)
+  activeListener = ref
+  ref.on('value', snap => {
+    const data = snap.val() || {}
+    boardCache = data
+    loadEl.style.display = 'none'
+    contentEl.style.display = 'block'
+    renderBoard(data)
+  })
+}
+
+function isAvail(v) { return v && v !== 'X' }
+
+function renderBoard(data) {
+  const dates = getWeekDates(weekStart)
+  const submitted = STAFF.filter(s => data[s.name])
+  const missing = STAFF.filter(s => !data[s.name])
+
+  document.getElementById('board-count').textContent =
+    `已填 ${submitted.length}/${STAFF.length} 人`
+
+  // Daily summary
+  let daily = ''
+  for (let d = 0; d < 7; d++) {
+    const isWE = d >= 5
+    const minI = isWE ? MIN_INNER_WE : MIN_INNER_WD
+    const minO = isWE ? MIN_OUTER_WE : MIN_OUTER_WD
+    const cntI = STAFF.filter(s => s.zone === '內場' && data[s.name] && isAvail(data[s.name].avail[d])).length
+    const cntO = STAFF.filter(s => s.zone === '外場' && data[s.name] && isAvail(data[s.name].avail[d])).length
+    const okI = cntI >= minI, okO = cntO >= minO
+    const dayName = ['一','二','三','四','五','六','日'][d]
+    daily += `<div style="text-align:center;background:#fff;border-radius:8px;padding:6px 3px;border:1px solid #e8e8e8">
+      <div style="font-size:10px;color:#888">${dayName}</div>
+      <div style="font-size:12px;font-weight:700">${dates[d]}</div>
+      <div style="font-size:11px;margin-top:3px;color:${okO ? '#2E7D32' : '#C62828'}">外${cntO}</div>
+      <div style="font-size:11px;color:${okI ? '#2E7D32' : '#C62828'}">內${cntI}</div>
+      <div style="font-size:9px;color:#aaa;margin-top:1px">需${minO}/${minI}</div>
+    </div>`
+  }
+  document.getElementById('daily-summary').innerHTML = daily
+
+  // Zone tables
+  ;['外場','內場'].forEach(zone => {
+    const zStaff = STAFF.filter(s => s.zone === zone)
+    let html = `<table class="tbl"><tr>
+      <th style="min-width:50px">姓名</th>
+      ${dates.map((d, i) => `<th style="text-align:center;min-width:42px">${['一','二','三','四','五','六','日'][i]}<br><span style="font-weight:400">${d}</span></th>`).join('')}
+      <th style="text-align:center">天</th></tr>`
+
+    zStaff.forEach(s => {
+      const rec = data[s.name]
+      if (!rec) {
+        html += `<tr style="opacity:.35"><td>${s.name}</td>${Array(7).fill('<td style="text-align:center">—</td>').join('')}<td style="text-align:center;font-size:11px;color:#999">未填</td></tr>`
+      } else {
+        const av = rec.avail || Array(7).fill('X')
+        const cnt = av.filter(v => isAvail(v)).length
+        const badgeCls = cnt >= 4 ? 'badge-hi' : cnt >= 2 ? 'badge-md' : 'badge-lo'
+        html += `<tr><td style="font-weight:600">${s.name}</td>
+          ${av.map(v => `<td style="text-align:center"><span class="tag ${tagCls(v)}">${v}</span></td>`).join('')}
+          <td style="text-align:center"><span class="badge ${badgeCls}">${cnt}</span></td></tr>`
+      }
+    })
+    html += '</table>'
+    document.getElementById(zone === '外場' ? 'board-outer' : 'board-inner').innerHTML = html
+  })
+
+  // Missing
+  document.getElementById('board-missing').innerHTML = missing.length
+    ? `<div class="warn">尚未填寫（${missing.length} 人）：${missing.map(s => `<strong>${s.name}</strong>`).join('、')}</div>`
+    : `<div class="ok">所有夥伴均已填寫</div>`
+}
+
+// ============================================================
+// Tab 3: 匯出排班
+// ============================================================
+async function refreshExport() {
+  const loadEl = document.getElementById('export-loading')
+  const contentEl = document.getElementById('export-content')
+  loadEl.style.display = 'block'
+  contentEl.style.display = 'none'
+
+  let data = {}
+  if (demoMode) {
+    try { data = JSON.parse(localStorage.getItem('ippudo_demo_' + weekStart) || '{}') } catch(e) {}
+  } else if (db) {
+    try {
+      const snap = await db.ref('weeks/' + weekStart).once('value')
+      data = snap.val() || {}
+    } catch(e) {}
+  }
+
+  loadEl.style.display = 'none'
+  contentEl.style.display = 'block'
+  renderExport(data)
+}
+
+function renderExport(data) {
+  const dates = getWeekDates(weekStart)
+  const submitted = STAFF.filter(s => data[s.name])
+
+  // Analysis
+  let ana = ''
+  for (let d = 0; d < 7; d++) {
+    const isWE = d >= 5
+    const minI = isWE ? MIN_INNER_WE : MIN_INNER_WD
+    const minO = isWE ? MIN_OUTER_WE : MIN_OUTER_WD
+    const inner = STAFF.filter(s => s.zone === '內場' && data[s.name] && isAvail(data[s.name].avail[d]))
+    const outer = STAFF.filter(s => s.zone === '外場' && data[s.name] && isAvail(data[s.name].avail[d]))
+    const bad = inner.length < minI || outer.length < minO
+    ana += `<div class="${bad ? 'err' : 'ok'}">${DAYS[d]} ${dates[d]} | 外場 ${outer.length}人（需${minO}）${outer.length < minO ? ' 不足' : ''} | 內場 ${inner.length}人（需${minI}）${inner.length < minI ? ' 不足' : ''}</div>`
+  }
+  document.getElementById('export-analysis').innerHTML = ana
+
+  // Table
+  let tbl = `<table class="tbl"><tr>
+    <th>姓名</th><th>區域</th>
+    ${dates.map((d, i) => `<th style="text-align:center">${DAYS[i]}<br>${d}</th>`).join('')}
+    <th style="text-align:center">天數</th></tr>`
+
+  ;['外場','內場'].forEach(zone => {
+    tbl += `<tr class="zone-hdr"><td colspan="10">${zone}</td></tr>`
+    STAFF.filter(s => s.zone === zone).forEach(s => {
+      const rec = data[s.name]
+      if (!rec) {
+        tbl += `<tr style="opacity:.35"><td>${s.name}</td><td>${zone}</td>${Array(7).fill('<td style="text-align:center">—</td>').join('')}<td style="text-align:center">—</td></tr>`
+        return
+      }
+      const av = rec.avail || Array(7).fill('X')
+      const cnt = av.filter(v => isAvail(v)).length
+      const badgeCls = cnt >= 4 ? 'badge-hi' : cnt >= 2 ? 'badge-md' : 'badge-lo'
+      tbl += `<tr><td style="font-weight:600">${s.name}</td><td>${zone}</td>
+        ${av.map(v => `<td style="text-align:center"><span class="tag ${tagCls(v)}">${v}</span></td>`).join('')}
+        <td style="text-align:center"><span class="badge ${badgeCls}">${cnt}</span></td></tr>`
+    })
+  })
+  tbl += '</table>'
+  document.getElementById('export-table').innerHTML = tbl
+  window._exportData = data
+}
+
+// ============================================================
+// Excel Download (SheetJS)
+// ============================================================
+function downloadExcel() {
+  const data = window._exportData || {}
+  const dates = getWeekDates(weekStart)
+  const fullDates = getWeekFullDates(weekStart)
+
+  // Build worksheet data
+  const wsData = []
+
+  // Row 1: Title
+  wsData.push(['一風堂台南高鐵店 副休表（PT給班）'])
+  // Row 2: Week range
+  const d0 = fullDates[0], d6 = fullDates[6]
+  wsData.push([`排班週：${d0.getFullYear()}/${d0.getMonth()+1}/${d0.getDate()} (一) ～ ${d6.getFullYear()}/${d6.getMonth()+1}/${d6.getDate()} (日)`])
+  // Row 3: generation info
+  wsData.push([`產出時間：${new Date().toLocaleString('zh-TW', {timeZone:'Asia/Taipei'})}　填寫人數：${STAFF.filter(s=>data[s.name]).length}/${STAFF.length}`])
+  // Row 4: empty
+  wsData.push([])
+  // Row 5: headers
+  wsData.push(['姓名', '區域', ...dates.map((d, i) => DAYS[i] + ' ' + d), '可排天數'])
+
+  // Data rows grouped by zone
+  ;['外場','內場'].forEach(zone => {
+    // Zone header row
+    wsData.push([`【${zone}】`])
+
+    STAFF.filter(s => s.zone === zone).forEach(s => {
+      const rec = data[s.name]
+      if (!rec) {
+        wsData.push([s.name, zone, ...Array(7).fill('—'), '未填'])
+      } else {
+        const av = rec.avail || Array(7).fill('X')
+        const cnt = av.filter(v => isAvail(v)).length
+        wsData.push([s.name, zone, ...av, cnt])
+      }
+    })
+    wsData.push([]) // gap between zones
+  })
+
+  // Summary row
+  wsData.push(['每日可用人數'])
+  const summaryOuter = ['外場', '', ...Array.from({length:7}, (_,d) =>
+    STAFF.filter(s => s.zone==='外場' && data[s.name] && isAvail(data[s.name].avail[d])).length
+  ), '']
+  const summaryInner = ['內場', '', ...Array.from({length:7}, (_,d) =>
+    STAFF.filter(s => s.zone==='內場' && data[s.name] && isAvail(data[s.name].avail[d])).length
+  ), '']
+  wsData.push(summaryOuter)
+  wsData.push(summaryInner)
+
+  // Create workbook
+  const wb = XLSX.utils.book_new()
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+  // Column widths
+  ws['!cols'] = [
+    {wch: 8},  // 姓名
+    {wch: 6},  // 區域
+    {wch: 10}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 10}, // 7 days
+    {wch: 8},  // 可排天數
+  ]
+
+  // Merge title cell
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:0,c:9}},
+    {s:{r:1,c:0}, e:{r:1,c:9}},
+    {s:{r:2,c:0}, e:{r:2,c:9}},
+  ]
+
+  // Style cells: title
+  const titleStyle = {font:{bold:true, sz:16}, alignment:{horizontal:'center'}}
+  const headerStyle = {font:{bold:true, sz:11}, fill:{fgColor:{rgb:'E8E8E8'}}, alignment:{horizontal:'center'}, border:{bottom:{style:'thin'}}}
+
+  // Apply cell styles
+  const range = XLSX.utils.decode_range(ws['!ref'])
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({r:R, c:C})
+      if (!ws[addr]) continue
+      const cell = ws[addr]
+
+      // Title rows
+      if (R === 0) {
+        cell.s = {font:{bold:true, sz:16}, alignment:{horizontal:'center', vertical:'center'}}
+      } else if (R === 1 || R === 2) {
+        cell.s = {font:{sz:11, color:{rgb:'666666'}}, alignment:{horizontal:'center'}}
+      }
+      // Header row (row 5, index 4)
+      else if (R === 4) {
+        cell.s = {font:{bold:true, sz:11}, fill:{fgColor:{rgb:'E0E0E0'}}, alignment:{horizontal:'center'}, border:{bottom:{style:'thin', color:{rgb:'999999'}}}}
+      }
+      // Zone header rows
+      else if (C === 0 && typeof cell.v === 'string' && cell.v.startsWith('【')) {
+        cell.s = {font:{bold:true, sz:12}, fill:{fgColor:{rgb:'F5F5F5'}}}
+      }
+      // Data cells: color by value
+      else if (C >= 2 && C <= 8 && R > 4) {
+        const v = String(cell.v || '')
+        if (v === 'A') {
+          cell.s = {fill:{fgColor:{rgb:'E8F5E9'}}, font:{bold:true, color:{rgb:'2E7D32'}}, alignment:{horizontal:'center'}}
+        } else if (v === 'X') {
+          cell.s = {fill:{fgColor:{rgb:'F5F5F5'}}, font:{color:{rgb:'999999'}}, alignment:{horizontal:'center'}}
+        } else if (v && v !== '—' && v !== '') {
+          cell.s = {fill:{fgColor:{rgb:'E3F2FD'}}, font:{bold:true, color:{rgb:'1565C0'}}, alignment:{horizontal:'center'}}
+        } else {
+          cell.s = {alignment:{horizontal:'center'}}
+        }
+      }
+      // 可排天數 column
+      else if (C === 9 && R > 4 && typeof cell.v === 'number') {
+        const cnt = cell.v
+        const rgb = cnt >= 4 ? 'E8F5E9' : cnt >= 2 ? 'FFF3CD' : 'FFEBEE'
+        const fontRgb = cnt >= 4 ? '2E7D32' : cnt >= 2 ? '856404' : 'C62828'
+        cell.s = {fill:{fgColor:{rgb}}, font:{bold:true, color:{rgb:fontRgb}}, alignment:{horizontal:'center'}}
+      }
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, 'PT給班表')
+
+  // Download
+  const fileName = `一風堂南鐵_PT給班表_${weekStart}.xlsx`
+  XLSX.writeFile(wb, fileName)
+}
+
+// ============================================================
+// Copy Text
+// ============================================================
+function copyText() {
+  const data = window._exportData || {}
+  const dates = getWeekDates(weekStart)
+  const submitted = STAFF.filter(s => data[s.name])
+
+  let txt = `一風堂台南高鐵店 PT給班表\n排班週：${weekStart}\n填寫：${submitted.length}/${STAFF.length}\n\n`
+  txt += `姓名\t區域\t${dates.map((d,i)=>DAYS[i]+' '+d).join('\t')}\t可排天數\n`
+  txt += '─'.repeat(60) + '\n'
+
+  ;['外場','內場'].forEach(zone => {
+    txt += `\n【${zone}】\n`
+    STAFF.filter(s => s.zone === zone).forEach(s => {
+      const rec = data[s.name]
+      if (!rec) {
+        txt += `${s.name}\t${zone}\t${Array(7).fill('—').join('\t')}\t未填\n`
+      } else {
+        const av = rec.avail || Array(7).fill('X')
+        const cnt = av.filter(v => isAvail(v)).length
+        txt += `${s.name}\t${zone}\t${av.join('\t')}\t${cnt}天\n`
+      }
+    })
+  })
+
+  navigator.clipboard.writeText(txt).then(() => {
+    const msg = document.getElementById('copy-msg')
+    msg.textContent = '已複製'
+    setTimeout(() => msg.textContent = '', 2000)
+  })
+}
+
+// ============================================================
+// Init
+// ============================================================
+function init() {
+  document.getElementById('week-start').value = weekStart
+  updateWeekDisplay()
+  initNameSelect()
+
+  const config = getStoredConfig()
+  if (config) {
+    initFirebase(config)
+    if (myName) loadMyData()
+  } else {
+    document.getElementById('setup-box').style.display = 'block'
+    setConnStatus('off', '未設定')
+  }
+}
+
+init()
+</script>
+</body>
+</html>
